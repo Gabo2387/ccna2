@@ -1,0 +1,198 @@
+
+
+net use x: /delete
+net use h: /delete
+
+"attack 135"
+net use \\10.3.3.121\ipc$ /user:administrator
+
+"attack 445"
+net use w: \\10.3.3.121\c$
+
+---- BEGIN SSH2 PUBLIC KEY ----
+AAAAB3NzaC1yc2EAAAADAQABAAABAQDlXMNANGwxbCFAnU2/UxnHAhJ/wL/HS/af
+2BKPFtQrpOuqOWR+iyxjtJzyqGkvl4Fi1sSy1IzGn+sm7AJ3OLiWazQhTBeb0o4o
+Q+KMtEDI3Yh4z7cI4DZxtHTN+FGtJrWBu03sQB8S2ZKKlpJAQvoVckcmbPpp4XTH
+6Os1SZIQN6Cj6yoUhH6DWhlWwCY3df/1RPyPZWct534uOSlW9eKhI2fi7qJw3/gO
+EXUk2wG/n6UjhlU7rY0MjLTwzGdVghsUic9ZfhUaJtYFiwGzdaohj9AWD6kxp1bU
+Zd7LEAHfyTiu7CliLe3RK95cC19UdQYnikn0aqefIF3YH6S/cOxL
+---- END SSH2 PUBLIC KEY ----
+
+**task 2 FW policy block sites**
+config t
+NO ip access-list standard NOPORN
+ip access-list standard NOPORN
+DENY 66.254.0.0 0.0.255.255
+deny 161.49.0.0 0.0.255.255
+DENY 104.21.0.0 0.0.255.255
+DENY 68.235.0.0 0.0.255.255
+DENY 104.17.0.0 0.0.255.255
+DENY 88.208.0.0 0.0.255.255
+DENY 208.77.0.0 0.0.255.255
+DENY 172.67.0.0 0.0.255.255
+Permit Any
+Int Gi 1
+ ip access-group NOPORN in
+end
+
+
+config t
+no access-list 25
+access-list 25 DENY 66.254.0.0 0.0.255.255
+access-list 25 DENY 104.21.0.0 0.0.255.255
+access-list 25 DENY 68.235.0.0 0.0.255.255
+access-list 25 DENY 104.17.0.0 0.0.255.255
+access-list 25 DENY 88.208.0.0 0.0.255.255
+access-list 25 DENY 208.77.0.0 0.0.255.255
+access-list 25 DENY 172.67.0.0 0.0.255.255
+access-list 25 permit Any
+Int gi 1
+ ip access-group 25 in
+end
+
+
+config t
+Int gi 1
+ NO ip access-group 25 in
+
+
+
+config t
+NO ip access-list standard NOISKUL
+ip access-list standard NOISKUL
+DENY   110.34.0.0  0.0.255.255
+DENY   206.189.0.0  0.0.255.255
+DENY   74.91.0.0  0.0.255.255
+DENY   178.128.0.0   0.0.255.255
+DENY   103.131.0.0  0.0.255.255
+DENY    210.4.0.0  0.0.255.255
+DENY   50.6.0.0   0.0.255.255
+DENY   167.99.0.0  0.0.255.255
+
+Permit Any
+Int Gi 1
+ ip access-group NOISKUL in
+end
+
+ping www.aics.edu.ph  - 110.34.166.196
+ping www.tcu.edu.ph -    206.189.153.212
+ping www.neu.edu.ph -   74.91.223.119
+ping www.nemsu.edu.ph - 178.128.99.37
+ping www.basc.edu.ph  - 103.131.95.36
+ping www.auf.edu.ph -     210.4.97.201
+ping www.ccp.edu.ph - 50.6.160.47
+ping www.ul.edu.ph - 167.99.68.208
+
+
+config t
+NO ip access-list standard NOTORS
+ip access-list standard NOTORS
+DENY   162.159.0.0   0.0.255.255
+DENY   104.21.0.0  0.0.255.255
+DENY   84.32.0.0   0.0.255.255
+DENY   172.67.0.0   0.0.255.255
+DENY   76.223.0.0   0.0.255.255
+DENY    13.248.0.0  0.0.255.255
+DENY   104.26.0.0   0.0.255.255
+DENY   95.211.0.0   0.0.255.255
+Permit Any
+Int Gi 1
+ ip access-group NOTORS in
+end
+
+
+
+*********FW
+		PROTOCAL 		HACKER 	VICTIM			 PORT
+PERMIT		TCP,UDP,ICMP,IP		any		bet10,bet11		110,143,53-etc.
+
+
+conf t
+no ip access-list extended FW1
+ip access-list extended FW1
+Permit tcp any host bet10.com eq 80 
+Permit tcp any host bet10.com eq 443 
+Permit icmp any host bet10.com 
+Permit tcp any host bet11.com eq 53
+Permit tcp any host bet11.com eq 443 
+Permit tcp any host bet11.com eq 22
+Int gi 3
+ip access-Group FW1 in
+end
+
+
+Int gi 3
+no ip access-Group FW1 in
+end
+
+---------------------------
+
+
+conf t
+no ip access-list extended FW2
+ip access-list extended FW2
+Permit tcp any host bet10.com eq 80 
+Permit tcp any host bet10.com eq 53
+Permit tcp any host bet11.com eq 2000
+Permit tcp any host bet11.com eq 5060
+Permit tcp any host bet11.com eq 1720
+Int gi 3
+ip access-Group FW2 in
+end
+
+
+---------------------------------
+
+conf t
+no ip access-list extended FW3
+ip access-list extended FW3
+Permit tcp any host bet10.com eq 23
+Permit tcp any host bet10.com eq 80
+Permit icmp any host bet11.com
+Permit tcp any host bet11.com eq 443
+Permit tcp any host bet11.com eq 5060
+Int gi 3
+ip access-Group FW3 in
+end
+
+--------------------------------
+conf t
+no ip access-list extended FW4
+ip access-list extended FW4
+Permit tcp any host bet10.com eq 443
+Permit tcp any host bet11.com eq 23
+Int gi 3
+ip access-Group FW4 in
+end
+
+---------------------------------------
+
+NAT/PAT protec web app
+
+	InsideIP		InsidePort		OutsideIP	OutsidePort
+192.168.103.10 		80/443			208.8.8.69	80,443
+192.168.103.11		80/443			208.8.8.69	8080,8443
+
+
+config t
+no access-list 8
+access-list 8 permit 192.168.103.10
+access-list 8 permit 192.168.103.11
+Int Gi 3
+ ip nat Inside
+Int gi 1
+ ip nat Outside
+IP Nat inside source static tcp 192.168.103.10 80 208.8.8.69 80
+IP Nat inside source static tcp 192.168.103.10 443 208.8.8.69 443
+IP Nat inside source static tcp 192.168.103.11 80 208.8.8.69 8080
+IP Nat inside source static tcp 192.168.103.11 443 208.8.8.69 8443
+IP nat inside source list 8 int gi 1 Overload
+ip host betlog.com 208.8.8.69
+end
+show ip nat translation
+-------------------------------------
+no ip nat inside source static tcp 192.168.103.10 80 208.8.8.69 80 extendable
+no ip nat inside source static tcp 192.168.103.10 443 208.8.8.69 443 extendable
+no ip nat inside source static tcp 192.168.103.11 80 208.8.8.69 8080 extendable
+no ip nat inside source static tcp 192.168.103.11 443 208.8.8.69 8443 extendable
+no ip nat inside source list 8 interface GigabitEthernet1 overload
